@@ -60,9 +60,9 @@ instance Chromosome AAProg where
     where (b,f) = getAA c
           (s,g2) = rmx g (length b)
           (a,z) = splitAt s b
-          (r,g3) = (rmx g2 10)
-          (n,g4) = rbts g3 (r-5)
-          (b',g') = if r < 5 then (a++drop r z,g3) else (a++n++z,g4)
+          (r,g3) = (rmx g2 26)
+          (n,g4) = rbts g3 (r-13)
+          (b',g') = if r < 13 then (a++drop r z,g3) else (a++n++z,g4)
 
   fitness a = f b
     where (b,f) = getAA a
