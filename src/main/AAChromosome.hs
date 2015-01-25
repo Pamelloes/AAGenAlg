@@ -38,6 +38,11 @@ rbts g i = swap $ runWriter j
         f :: RandomGen g => g -> Writer BitSeries g
         f a = writer $ fmap (:[]) $ swap $ rbt a
 
+genProg :: RandomGen g => Int -> (BitSeries->Double) -> g -> (AAProg,g)
+genProg i f g = (AAProg (b,f),g')
+  where (l,g1) = rmx g i
+        (b,g') = rbts g1 l
+
 instance Chromosome AAProg where
   crossover g c d = ([AAProg (b1',f1),AAProg (b2',f2)],g')
     where (b1,f1) = getAA c

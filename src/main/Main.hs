@@ -34,6 +34,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 module Main where
 
 import AAChromosome
+import AI.GeneticAlgorithm.Simple (runGA)
+import System.Random
+
+fitness :: [Bool] -> Double
+fitness = undefined
+
+finish :: AAProg -> Int -> Bool
+finish = undefined
 
 main :: IO ()
-main = putStrLn "Hello, world!"
+main = do
+  rg <- getStdGen
+  let AAProg (p,_) = runGA rg 25 0.5 (genProg 50 fitness) finish
+  print $ "Program: " ++ show p
