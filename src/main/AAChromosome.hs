@@ -39,7 +39,17 @@ rbts g i = swap $ runWriter j
         f a = writer $ fmap (:[]) $ swap $ rbt a
 
 instance Chromosome AAProg where
-  crossover = undefined
+  crossover g c d = ([AAProg (b1',f1),AAProg (b2',f2)],g')
+    where (b1,f1) = getAA c
+          (b2,f2)  = getAA d
+          (g1,b1') = combine g b1 b2
+          (g',b2') = combine g1 b1 b2
+          combine :: RandomGen g => g -> [a] -> [a] -> (g,[a])
+          combine g []     _      = (g,[])
+          combine g _      []     = (g,[])
+          combine g (a:as) (b:bs) = fmap (t:) (combine g' as bs)
+            where (c,g') = rbt g
+                  t = if c then a else b
 
   mutation g c = (AAProg (b',f),g')
     where (b,f) = getAA c
