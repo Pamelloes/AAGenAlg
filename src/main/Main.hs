@@ -35,6 +35,8 @@ module Main where
 
 import AAChromosome
 import AI.GeneticAlgorithm.Simple
+import Control.Exception
+import Control.Monad.Catch.Pure
 import Control.Monad.Writer
 import Data.Bits
 import Data.Char
@@ -44,9 +46,9 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import Language.AA.AdvancedAssembly
 import System.Random
 
-handleIO :: DataType -> Writer String DataType                            
+handleIO :: DataType -> WriterT String Catch DataType                            
 handleIO a@(_,BString s) = lg a s                                  
-  where lg :: DataType -> BitSeries -> Writer String DataType             
+  where lg :: DataType -> BitSeries -> WriterT String Catch DataType             
         lg a [] = return a
         lg d s = do
           let (a,b) = splitAt 8 s
@@ -73,18 +75,19 @@ diff a [] = (-1) * (length a)
 diff (a:as) (b:bs) = d + (diff as bs)
   where d = foldr (+) 0 $ zipWith (\a b->if a==b then 1 else 0) (up a) (up b)
 
-runCond :: Int -> State m -> Maybe (State m)
+runCond :: Int -> State (WriterT String Catch) 
+               -> WriterT String Catch (State (WriterT String Catch))
 runCond i (S (a,(b,(c,_))))
-  | i > 0 = Just $ S (a,(b,(c,runCond (i-1))))
-  | otherwise = Nothing
+  | i > 0 = return $ S (a,(b,(c,runCond (i-1))))
+  | otherwise = lift $ throwM (ErrorCall "Too long!")
 
 fit :: BitSeries -> Double
-fit b = if fail then 0
+fit b = if fail then -1000
   else if succ then 10001
     else (fromIntegral df)
-  where ((s,dt),st) = runWriter $ runProgram' (runCond 5) handleIO b
-        S (_,(_,(_,f))) = s
-        fail = case (f s) of { Nothing -> True; Just _ -> False }
+  where c = runCatch $ runWriterT $ runProgram' (runCond 20) handleIO b
+        fail = case (c) of { Left _ -> True; Right _ -> False }
+        Right ((s,dt),st) = c
         desired= "Hello World!"
         succ   = st==desired
         df     = diff (B.unpack $ C.pack desired) 
